@@ -2,6 +2,7 @@ package com.github.hstyi.libssh2j;
 
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.PointerByReference;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.nio.charset.StandardCharsets;
@@ -384,6 +385,14 @@ public class libssh2 {
         return libssh2_library().libssh2_channel_request_pty_ex(getPointer(channel), term, term_len, modes, modes_len, width, height, width_px, height_px);
     }
 
+    public static int libssh2_channel_request_pty(
+            LIBSSH2_CHANNEL channel,
+            String term
+    ) {
+        final byte[] bytes = term.getBytes(StandardCharsets.UTF_8);
+        return libssh2_channel_request_pty_ex(channel, bytes, bytes.length, null, 0, LIBSSH2_TERM_WIDTH, LIBSSH2_TERM_HEIGHT, LIBSSH2_TERM_WIDTH_PX, LIBSSH2_TERM_HEIGHT_PX);
+    }
+
     public static int libssh2_channel_write_ex(
             LIBSSH2_CHANNEL channel,
             int stream_id,
@@ -620,6 +629,23 @@ public class libssh2 {
         return libssh2_library().libssh2_channel_eof(getPointer(channel));
     }
 
+    public static int libssh2_channel_send_eof(LIBSSH2_CHANNEL channel) {
+        return libssh2_library().libssh2_channel_send_eof(getPointer(channel));
+    }
+
+    public static int libssh2_channel_request_pty_size_ex(LIBSSH2_CHANNEL channel,
+                                                          int width, int height,
+                                                          int width_px,
+                                                          int height_px) {
+        return libssh2_library().libssh2_channel_request_pty_size_ex(getPointer(channel), width, height, width_px, height_px);
+    }
+
+    public static int libssh2_channel_request_pty_size(LIBSSH2_CHANNEL channel,
+                                                       int width, int height) {
+        return libssh2_channel_request_pty_size_ex(channel, width, height, 0, 0);
+    }
+
+
     @Nullable
     public static String libssh2_userauth_list(
             LIBSSH2_SESSION session,
@@ -650,6 +676,74 @@ public class libssh2 {
         return libssh2_library().libssh2_version(required_version);
     }
 
+    public static int libssh2_channel_x11_req_ex(LIBSSH2_CHANNEL channel, int single_connection, byte @Nullable [] auth_proto, byte @Nullable [] auth_cookie, int screen_number) {
+        return libssh2_library().libssh2_channel_x11_req_ex(getPointer(channel), single_connection, auth_proto, auth_cookie, screen_number);
+    }
+
+
+    public static int libssh2_channel_x11_req(LIBSSH2_CHANNEL channel, int screen_number) {
+        return libssh2_channel_x11_req_ex(channel, 0, null, null, screen_number);
+    }
+
+    public static int libssh2_channel_signal_ex(LIBSSH2_CHANNEL channel, byte[] signame, int signame_len) {
+        return libssh2_library().libssh2_channel_signal_ex(getPointer(channel), signame, signame_len);
+    }
+
+    public static int libssh2_channel_signal(LIBSSH2_CHANNEL channel, String signame) {
+        final byte[] bytes = signame.getBytes(StandardCharsets.UTF_8);
+        return libssh2_channel_signal_ex(channel, bytes, bytes.length);
+    }
+
+    @Nullable
+    public static LIBSSH2_AGENT libssh2_agent_init(LIBSSH2_SESSION session) {
+        final Pointer pointer = libssh2_library().libssh2_agent_init(getPointer(session));
+        if (pointer == null) return null;
+        return new LIBSSH2_POINTER(pointer);
+    }
+
+    public static int libssh2_agent_set_identity_path(LIBSSH2_AGENT agent, byte[] path) {
+        return libssh2_library().libssh2_agent_set_identity_path(getPointer(agent), path);
+    }
+
+    public static int libssh2_agent_userauth(LIBSSH2_AGENT agent, byte[] username, libssh2_agent_publickey identity) {
+        return libssh2_library().libssh2_agent_userauth(getPointer(agent), username, identity);
+    }
+
+    public static int libssh2_agent_list_identities(LIBSSH2_AGENT agent) {
+        return libssh2_library().libssh2_agent_list_identities(agent);
+    }
+
+    public static void libssh2_agent_free(LIBSSH2_AGENT agent) {
+        libssh2_library().libssh2_agent_free(getPointer(agent));
+    }
+
+    public static int libssh2_agent_connect(LIBSSH2_AGENT agent) {
+        return libssh2_library().libssh2_agent_connect(getPointer(agent));
+    }
+
+    public static int libssh2_agent_disconnect(LIBSSH2_AGENT agent) {
+        return libssh2_library().libssh2_agent_disconnect(getPointer(agent));
+    }
+
+    public static int libssh2_agent_get_identity(LIBSSH2_AGENT agent,
+                                                 @NotNull libssh2_agent_publickey store,
+                                                 @Nullable libssh2_agent_publickey prev) {
+        PointerByReference storeRef = new PointerByReference();
+        int rc = libssh2_library().libssh2_agent_get_identity(getPointer(agent), storeRef, prev);
+
+        if (rc == 0) {
+            Pointer nextKeyPtr = storeRef.getValue();
+            final libssh2_agent_publickey next = new libssh2_agent_publickey(nextKeyPtr);
+            next.read();
+            store.magic = next.magic;
+            store.node = next.node;
+            store.blob = next.blob;
+            store.blob_len = next.blob_len;
+            store.comment = next.comment;
+        }
+
+        return rc;
+    }
 
     private static Pointer getPointer(Object object) {
         if (object instanceof LIBSSH2_POINTER) {

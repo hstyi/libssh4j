@@ -2,7 +2,7 @@ package com.github.hstyi.libssh2j;
 
 import com.sun.jna.Pointer;
 
-class LIBSSH2_POINTER implements LIBSSH2_SFTP, LIBSSH2_CHANNEL, LIBSSH2_SFTP_HANDLE, LIBSSH2_SESSION {
+class LIBSSH2_POINTER implements LIBSSH2_AGENT, LIBSSH2_SFTP, LIBSSH2_CHANNEL, LIBSSH2_SFTP_HANDLE, LIBSSH2_SESSION {
     final Pointer pointer;
 
     LIBSSH2_POINTER(Pointer pointer) {

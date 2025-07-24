@@ -195,5 +195,33 @@ interface libssh2_library extends Library {
 
     void libssh2_trace(Pointer session, int bitmask);
 
+    int libssh2_channel_x11_req_ex(Pointer channel, int single_connection, byte[] auth_proto, byte[] auth_cookie, int screen_number);
+
     String libssh2_version(int required_version);
+
+    int libssh2_channel_signal_ex(Pointer pointer, byte[] signame, int signameLen);
+
+    @Nullable Pointer libssh2_agent_init(Pointer session);
+
+    int libssh2_agent_set_identity_path(Pointer agent, byte[] path);
+
+    int libssh2_agent_userauth(Pointer pointer, byte[] username, libssh2_agent_publickey identity);
+
+    int libssh2_agent_list_identities(LIBSSH2_AGENT agent);
+
+    void libssh2_agent_free(Pointer pointer);
+
+    int libssh2_agent_connect(Pointer pointer);
+
+    int libssh2_agent_disconnect(Pointer pointer);
+
+    int libssh2_agent_get_identity(
+            Pointer agent,
+            PointerByReference store,
+            @Nullable libssh2_agent_publickey prev
+    );
+
+    int libssh2_channel_send_eof(Pointer pointer);
+
+    int libssh2_channel_request_pty_size_ex(Pointer channel, int width, int height, int widthPx, int heightPx);
 }
