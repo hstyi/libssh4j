@@ -38,6 +38,12 @@ class libssh2_loader {
     }
 
     private static File getLibraryFile() {
+
+        final String lfile = System.getProperty("libssh4j.library.file");
+        if (lfile != null && !lfile.trim().isEmpty()) {
+            return new File(lfile);
+        }
+
         final String path = System.getProperty("libssh4j.library.path");
         if (path != null && !path.trim().isEmpty()) {
             return new File(path, getFilename());
