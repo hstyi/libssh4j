@@ -224,6 +224,18 @@ public class libssh2 {
     public static final int LIBSSH2_FLAG_QUOTE_PATHS = 3;
 
 
+    /* libssh2_session_callback_set() constants */
+    public static final int LIBSSH2_CALLBACK_IGNORE = 0;
+    public static final int LIBSSH2_CALLBACK_DEBUG = 1;
+    public static final int LIBSSH2_CALLBACK_DISCONNECT = 2;
+    public static final int LIBSSH2_CALLBACK_MACERROR = 3;
+    public static final int LIBSSH2_CALLBACK_X11 = 4;
+    public static final int LIBSSH2_CALLBACK_SEND = 5;
+    public static final int LIBSSH2_CALLBACK_RECV = 6;
+    public static final int LIBSSH2_CALLBACK_AUTHAGENT = 7;
+    public static final int LIBSSH2_CALLBACK_AUTHAGENT_IDENTITIES = 8;
+    public static final int LIBSSH2_CALLBACK_AUTHAGENT_SIGN = 9;
+
     private static libssh2_library libssh2_library() {
         return libssh2_loader.getInstance();
     }
@@ -867,6 +879,10 @@ public class libssh2 {
                                                int want_reply,
                                                int interval) {
         return libssh2_library().libssh2_keepalive_config(getPointer(session), want_reply, interval);
+    }
+
+    public static Pointer libssh2_session_callback_set2(LIBSSH2_SESSION session, int cbtype, libssh2_cb_generic callback) {
+        return libssh2_library().libssh2_session_callback_set2(getPointer(session), cbtype, callback);
     }
 
     private static Pointer getPointer(Object object) {
