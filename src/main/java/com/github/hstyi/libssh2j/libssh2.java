@@ -203,6 +203,26 @@ public class libssh2 {
     public static final int LIBSSH2_CHANNEL_FLUSH_EXTENDED_DATA = -1;
     public static final int LIBSSH2_CHANNEL_FLUSH_ALL = -2;
 
+
+    /* libssh2_session_method_pref() constants */
+    public static int LIBSSH2_METHOD_KEX = 0;
+    public static int LIBSSH2_METHOD_HOSTKEY = 1;
+    public static int LIBSSH2_METHOD_CRYPT_CS = 2;
+    public static int LIBSSH2_METHOD_CRYPT_SC = 3;
+    public static int LIBSSH2_METHOD_MAC_CS = 4;
+    public static int LIBSSH2_METHOD_MAC_SC = 5;
+    public static int LIBSSH2_METHOD_COMP_CS = 6;
+    public static int LIBSSH2_METHOD_COMP_SC = 7;
+    public static int LIBSSH2_METHOD_LANG_CS = 8;
+    public static int LIBSSH2_METHOD_LANG_SC = 9;
+    public static int LIBSSH2_METHOD_SIGN_ALGO = 10;
+
+    /* flags */
+    public static final int LIBSSH2_FLAG_SIGPIPE = 1;
+    public static final int LIBSSH2_FLAG_COMPRESS = 2;
+    public static final int LIBSSH2_FLAG_QUOTE_PATHS = 3;
+
+
     private static libssh2_library libssh2_library() {
         return libssh2_loader.getInstance();
     }
