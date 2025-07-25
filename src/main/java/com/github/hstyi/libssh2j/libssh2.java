@@ -687,6 +687,12 @@ public class libssh2 {
         return libssh2_library().libssh2_channel_setenv_ex(getPointer(channel), varname, varname_len, value, value_len);
     }
 
+    public static int libssh2_channel_setenv(LIBSSH2_CHANNEL channel, String varname, String value) {
+        final byte[] bytes1 = varname.getBytes(charset);
+        final byte[] bytes2 = value.getBytes(charset);
+        return libssh2_channel_setenv_ex(channel, bytes1, bytes1.length, bytes2, bytes2.length);
+    }
+
     public static int libssh2_channel_eof(LIBSSH2_CHANNEL channel) {
         return libssh2_library().libssh2_channel_eof(getPointer(channel));
     }
