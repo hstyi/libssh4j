@@ -2,6 +2,7 @@ package com.github.hstyi.libssh2j;
 
 import com.sun.jna.Library;
 import com.sun.jna.Pointer;
+import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.ptr.LongByReference;
 import com.sun.jna.ptr.PointerByReference;
 import org.jetbrains.annotations.Nullable;
@@ -247,4 +248,8 @@ interface libssh2_library extends Library {
     Pointer libssh2_session_methods(Pointer session, int methodType);
 
     int libssh2_session_flag(Pointer pointer, int flag, int value);
+
+    int libssh2_keepalive_send(Pointer pointer, IntByReference secondsToNext);
+
+    int libssh2_keepalive_config(Pointer pointer, int wantReply, int interval);
 }

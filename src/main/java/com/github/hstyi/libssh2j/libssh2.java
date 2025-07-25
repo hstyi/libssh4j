@@ -1,6 +1,7 @@
 package com.github.hstyi.libssh2j;
 
 import com.sun.jna.Pointer;
+import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.ptr.LongByReference;
 import com.sun.jna.ptr.PointerByReference;
 import org.jetbrains.annotations.NotNull;
@@ -850,6 +851,16 @@ public class libssh2 {
 
     public static int libssh2_session_flag(LIBSSH2_SESSION session, int flag, int value) {
         return libssh2_library().libssh2_session_flag(getPointer(session), flag, value);
+    }
+
+    public static int libssh2_keepalive_send(LIBSSH2_SESSION session, IntByReference seconds_to_next) {
+        return libssh2_library().libssh2_keepalive_send(getPointer(session), seconds_to_next);
+    }
+
+    public static int libssh2_keepalive_config(LIBSSH2_SESSION session,
+                                               int want_reply,
+                                               int interval) {
+        return libssh2_library().libssh2_keepalive_config(getPointer(session), want_reply, interval);
     }
 
     private static Pointer getPointer(Object object) {
