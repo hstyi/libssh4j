@@ -1,14 +1,18 @@
 package com.github.hstyi.libssh2j;
 
 import com.sun.jna.Pointer;
+import com.sun.jna.ptr.LongByReference;
 import com.sun.jna.ptr.PointerByReference;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
 public class libssh2 {
 
+
+    public static Charset charset = StandardCharsets.UTF_8;
 
     /* Global API */
     public static final int LIBSSH2_INIT_NO_CRYPTO = 0x0001;
@@ -257,7 +261,7 @@ public class libssh2 {
 
     public static int libssh2_userauth_publickey_fromfile(LIBSSH2_SESSION session, String username, byte[] publickey,
                                                           byte[] privatekey, byte[] passphrase) {
-        final byte[] bytes = username.getBytes(StandardCharsets.UTF_8);
+        final byte[] bytes = username.getBytes(charset);
         return libssh2_userauth_publickey_fromfile_ex(session, bytes, bytes.length, publickey, privatekey, passphrase);
     }
 
@@ -278,8 +282,8 @@ public class libssh2 {
     }
 
     public static int libssh2_userauth_password(LIBSSH2_SESSION session, String username, String password) {
-        final byte[] bytes1 = username.getBytes();
-        final byte[] bytes2 = password.getBytes();
+        final byte[] bytes1 = username.getBytes(charset);
+        final byte[] bytes2 = password.getBytes(charset);
         return libssh2_userauth_password_ex(session, bytes1, bytes1.length,
                 bytes2, bytes2.length, null);
     }
@@ -310,14 +314,14 @@ public class libssh2 {
     }
 
     public static int libssh2_channel_shell(LIBSSH2_CHANNEL channel) {
-        final byte[] array = "shell".getBytes(StandardCharsets.UTF_8);
+        final byte[] array = "shell".getBytes(charset);
         return libssh2_channel_process_startup(channel, array, array.length, null, 0);
     }
 
 
     public static int libssh2_channel_exec(LIBSSH2_CHANNEL channel, String command) {
-        final byte[] execArray = "exec".getBytes(StandardCharsets.UTF_8);
-        final byte[] commandArray = command.getBytes(StandardCharsets.UTF_8);
+        final byte[] execArray = "exec".getBytes(charset);
+        final byte[] commandArray = command.getBytes(charset);
         return libssh2_channel_process_startup(channel, execArray, execArray.length, commandArray, commandArray.length);
     }
 
@@ -335,10 +339,9 @@ public class libssh2 {
     }
 
 
-
     @Nullable
     public static LIBSSH2_CHANNEL libssh2_channel_open_session(LIBSSH2_SESSION session) {
-        final byte[] array = "session".getBytes(StandardCharsets.UTF_8);
+        final byte[] array = "session".getBytes(charset);
         return libssh2_channel_open_ex(
                 session,
                 array,
@@ -397,7 +400,7 @@ public class libssh2 {
             LIBSSH2_SESSION session,
             String description
     ) {
-        final byte[] bytes = description.getBytes(StandardCharsets.UTF_8);
+        final byte[] bytes = description.getBytes(charset);
         return libssh2_session_disconnect_ex(session, SSH_DISCONNECT_BY_APPLICATION, bytes, new byte[0]);
     }
 
@@ -423,7 +426,7 @@ public class libssh2 {
             LIBSSH2_CHANNEL channel,
             String term
     ) {
-        final byte[] bytes = term.getBytes(StandardCharsets.UTF_8);
+        final byte[] bytes = term.getBytes(charset);
         return libssh2_channel_request_pty_ex(channel, bytes, bytes.length, null, 0, LIBSSH2_TERM_WIDTH, LIBSSH2_TERM_HEIGHT, LIBSSH2_TERM_WIDTH_PX, LIBSSH2_TERM_HEIGHT_PX);
     }
 
@@ -473,21 +476,21 @@ public class libssh2 {
     public static int libssh2_sftp_stat(LIBSSH2_SFTP sftp,
                                         String path,
                                         LIBSSH2_SFTP_ATTRIBUTES attrs) {
-        final byte[] bytes = path.getBytes(StandardCharsets.UTF_8);
+        final byte[] bytes = path.getBytes(charset);
         return libssh2_sftp_stat_ex(sftp, bytes, bytes.length, LIBSSH2_SFTP_STAT, attrs);
     }
 
     public static int libssh2_sftp_lstat(LIBSSH2_SFTP sftp,
                                          String path,
                                          LIBSSH2_SFTP_ATTRIBUTES attrs) {
-        final byte[] bytes = path.getBytes(StandardCharsets.UTF_8);
+        final byte[] bytes = path.getBytes(charset);
         return libssh2_sftp_stat_ex(sftp, bytes, bytes.length, LIBSSH2_SFTP_LSTAT, attrs);
     }
 
     public static int libssh2_sftp_setstat(LIBSSH2_SFTP sftp,
                                            String path,
                                            LIBSSH2_SFTP_ATTRIBUTES attrs) {
-        final byte[] bytes = path.getBytes(StandardCharsets.UTF_8);
+        final byte[] bytes = path.getBytes(charset);
         return libssh2_sftp_stat_ex(sftp, bytes, bytes.length, LIBSSH2_SFTP_SETSTAT, attrs);
     }
 
@@ -556,7 +559,7 @@ public class libssh2 {
      * This is a macro defined in a public libssh2 header file that is using the underlying function [libssh2_sftp_symlink_ex].
      */
     public static int libssh2_sftp_realpath(LIBSSH2_SFTP sftp, String path, byte[] target, int maxlen) {
-        final byte[] pathArray = path.getBytes(StandardCharsets.UTF_8);
+        final byte[] pathArray = path.getBytes(charset);
         return libssh2_sftp_symlink_ex(sftp, pathArray, pathArray.length, target, maxlen, LIBSSH2_SFTP_REALPATH);
     }
 
@@ -592,7 +595,7 @@ public class libssh2 {
     }
 
     public static int libssh2_sftp_rmdir(LIBSSH2_SFTP sftp, String path) {
-        final byte[] bytes = path.getBytes(StandardCharsets.UTF_8);
+        final byte[] bytes = path.getBytes(charset);
         return libssh2_sftp_rmdir_ex(sftp, bytes, bytes.length);
     }
 
@@ -604,7 +607,7 @@ public class libssh2 {
      * This is a macro defined in a public libssh2 header file that is using the underlying function libssh2_sftp_mkdir_ex.
      */
     public static int libssh2_sftp_mkdir(LIBSSH2_SFTP sftp, String path, long mode) {
-        byte[] array = path.getBytes(StandardCharsets.UTF_8);
+        byte[] array = path.getBytes(charset);
         return libssh2_sftp_mkdir_ex(sftp, array, array.length, mode);
     }
 
@@ -614,7 +617,7 @@ public class libssh2 {
      */
     @Nullable
     public static LIBSSH2_SFTP_HANDLE libssh2_sftp_opendir(LIBSSH2_SFTP sftp, String path) {
-        final byte[] pathArray = path.getBytes(StandardCharsets.UTF_8);
+        final byte[] pathArray = path.getBytes(charset);
         return libssh2_sftp_open_ex(sftp, pathArray, pathArray.length, 0, 0, LIBSSH2_SFTP_OPENDIR);
     }
 
@@ -628,7 +631,7 @@ public class libssh2 {
             long flags,
             long mode
     ) {
-        final byte[] bytes = filename.getBytes(StandardCharsets.UTF_8);
+        final byte[] bytes = filename.getBytes(charset);
         return libssh2_sftp_open_ex(sftp, bytes, bytes.length, flags, mode, LIBSSH2_SFTP_OPENFILE);
     }
 
@@ -649,7 +652,7 @@ public class libssh2 {
     }
 
     public static int libssh2_sftp_unlink(LIBSSH2_SFTP sftp, String filename) {
-        final byte[] bytes = filename.getBytes(StandardCharsets.UTF_8);
+        final byte[] bytes = filename.getBytes(charset);
         return libssh2_sftp_unlink_ex(sftp, bytes, bytes.length);
     }
 
@@ -728,7 +731,7 @@ public class libssh2 {
     }
 
     public static int libssh2_channel_signal(LIBSSH2_CHANNEL channel, String signame) {
-        final byte[] bytes = signame.getBytes(StandardCharsets.UTF_8);
+        final byte[] bytes = signame.getBytes(charset);
         return libssh2_channel_signal_ex(channel, bytes, bytes.length);
     }
 
@@ -794,6 +797,23 @@ public class libssh2 {
     public static int libssh2_channel_flush_stderr(LIBSSH2_CHANNEL channel) {
         return libssh2_channel_flush_ex(channel, SSH_EXTENDED_DATA_STDERR);
     }
+
+    public static long libssh2_channel_window_read_ex(LIBSSH2_CHANNEL channel, LongByReference read_avail, LongByReference window_size_initial) {
+        return libssh2_library().libssh2_channel_window_read_ex(getPointer(channel), read_avail, window_size_initial);
+    }
+
+    public static long libssh2_channel_window_read(LIBSSH2_CHANNEL channel) {
+        return libssh2_library().libssh2_channel_window_read_ex(getPointer(channel), null, null);
+    }
+
+    public static long libssh2_channel_window_write_ex(LIBSSH2_CHANNEL channel, LongByReference window_size_initial) {
+        return libssh2_library().libssh2_channel_window_write_ex(getPointer(channel), window_size_initial);
+    }
+
+    public static long libssh2_channel_window_write(LIBSSH2_CHANNEL channel, LongByReference window_size_initial) {
+        return libssh2_channel_window_write_ex(channel, null);
+    }
+
 
     private static Pointer getPointer(Object object) {
         if (object instanceof LIBSSH2_POINTER) {

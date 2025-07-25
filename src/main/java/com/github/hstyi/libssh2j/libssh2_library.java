@@ -2,6 +2,7 @@ package com.github.hstyi.libssh2j;
 
 import com.sun.jna.Library;
 import com.sun.jna.Pointer;
+import com.sun.jna.ptr.LongByReference;
 import com.sun.jna.ptr.PointerByReference;
 import org.jetbrains.annotations.Nullable;
 
@@ -234,4 +235,8 @@ interface libssh2_library extends Library {
     int libssh2_channel_wait_eof(Pointer pointer);
 
     int libssh2_channel_wait_closed(Pointer pointer);
+
+    long libssh2_channel_window_read_ex(Pointer pointer, LongByReference readAvail, LongByReference windowSizeInitial);
+
+    long libssh2_channel_window_write_ex(Pointer pointer, LongByReference windowSizeInitial);
 }
