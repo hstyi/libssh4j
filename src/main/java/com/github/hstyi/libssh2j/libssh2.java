@@ -838,6 +838,10 @@ public class libssh2 {
         return libssh2_library().libssh2_session_method_pref(getPointer(session), method_type, prefs);
     }
 
+    public static int libssh2_session_supported_algs(LIBSSH2_SESSION session, int method_type, PointerByReference algs) {
+        return libssh2_library().libssh2_session_supported_algs(getPointer(session), method_type, algs);
+    }
+
     private static Pointer getPointer(Object object) {
         if (object instanceof LIBSSH2_POINTER) {
             return ((LIBSSH2_POINTER) object).pointer;
