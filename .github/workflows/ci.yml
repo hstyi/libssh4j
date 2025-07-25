@@ -1,0 +1,20 @@
+name: Test
+
+on: [ push, pull_request ]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ windows-11-arm, windows-latest, ubuntu-24.04-arm, ubuntu-latest, macos-latest, macos-13 ]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '8'
+
+      - name: Test
+        run: maven test
