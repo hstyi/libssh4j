@@ -69,7 +69,7 @@ class libssh2Test {
 
     @SuppressWarnings("rawtypes")
     @Container
-    private final GenericContainer sshd = new GenericContainer("sshd")
+    private final GenericContainer sshd = new GenericContainer("linuxserver/openssh-server")
             .withEnv("PUID", "1000")
             .withEnv("PGID", "1000")
             .withEnv("TZ", "Etc/UTC")
