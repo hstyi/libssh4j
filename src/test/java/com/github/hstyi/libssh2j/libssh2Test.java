@@ -1,5 +1,6 @@
 package com.github.hstyi.libssh2j;
 
+import org.apache.commons.lang3.SystemUtils;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -13,6 +14,7 @@ import java.io.File;
 import java.io.FileDescriptor;
 import java.io.FileOutputStream;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.net.Socket;
 import java.net.SocketImpl;
 import java.nio.charset.StandardCharsets;
@@ -55,7 +57,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@Testcontainers
+@Testcontainers(disabledWithoutDocker = true)
 class libssh2Test {
 
     private static final String ED25519_256_PUB = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFU3mtV10iUK9JPROLkeeUbc1te6OtdXf4c34VNDQJXG";
@@ -237,9 +239,19 @@ class libssh2Test {
         implField.setAccessible(true);
         Object socketImpl = implField.get(socket);
 
-        Field getFileDescriptor = SocketImpl.class.getDeclaredField("fd");
+        if (SystemUtils.IS_JAVA_1_8) {
+            Field getFileDescriptor = SocketImpl.class.getDeclaredField("fd");
+            getFileDescriptor.setAccessible(true);
+            Object fileDescriptor = getFileDescriptor.get(socketImpl);
+
+            Field fdField = FileDescriptor.class.getDeclaredField("fd");
+            fdField.setAccessible(true);
+            return fdField.getInt(fileDescriptor);
+        }
+
+        Method getFileDescriptor = SocketImpl.class.getDeclaredMethod("getFileDescriptor");
         getFileDescriptor.setAccessible(true);
-        Object fileDescriptor = getFileDescriptor.get(socketImpl);
+        Object fileDescriptor = getFileDescriptor.invoke(socketImpl);
 
         Field fdField = FileDescriptor.class.getDeclaredField("fd");
         fdField.setAccessible(true);
