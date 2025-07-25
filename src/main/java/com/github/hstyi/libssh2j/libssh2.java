@@ -196,6 +196,9 @@ public class libssh2 {
     public static boolean LIBSSH2_SFTP_S_ISSOCK(long m) { return (m & LIBSSH2_SFTP_S_IFMT) == LIBSSH2_SFTP_S_IFSOCK;}
     // @formatter:on
 
+    public static final int LIBSSH2_CHANNEL_FLUSH_EXTENDED_DATA = -1;
+    public static final int LIBSSH2_CHANNEL_FLUSH_ALL = -2;
+
     private static libssh2_library libssh2_library() {
         return libssh2_loader.getInstance();
     }
@@ -306,19 +309,33 @@ public class libssh2 {
         return libssh2_library().libssh2_channel_process_startup(getPointer(channel), request, request_len, message, message_len);
     }
 
+    public static int libssh2_channel_shell(LIBSSH2_CHANNEL channel) {
+        final byte[] array = "shell".getBytes(StandardCharsets.UTF_8);
+        return libssh2_channel_process_startup(channel, array, array.length, null, 0);
+    }
 
-    /**
-     * This is a macro defined in a public libssh2 header file that is using the underlying function [libssh2_channel_process_startup].
-     */
+
     public static int libssh2_channel_exec(LIBSSH2_CHANNEL channel, String command) {
         final byte[] execArray = "exec".getBytes(StandardCharsets.UTF_8);
         final byte[] commandArray = command.getBytes(StandardCharsets.UTF_8);
         return libssh2_channel_process_startup(channel, execArray, execArray.length, commandArray, commandArray.length);
     }
 
-    /**
-     * This is a macro defined in a public libssh2 header file that is using the underlying function [libssh2_channel_open_ex](https://libssh2.org//libssh2_channel_open_ex.html).
-     */
+    public static int libssh2_channel_get_exit_status(LIBSSH2_CHANNEL channel) {
+        return libssh2_library().libssh2_channel_get_exit_status(getPointer(channel));
+    }
+
+    public static int libssh2_channel_wait_eof(LIBSSH2_CHANNEL channel) {
+        return libssh2_library().libssh2_channel_wait_eof(getPointer(channel));
+    }
+
+
+    public static int libssh2_channel_wait_closed(LIBSSH2_CHANNEL channel) {
+        return libssh2_library().libssh2_channel_wait_closed(getPointer(channel));
+    }
+
+
+
     @Nullable
     public static LIBSSH2_CHANNEL libssh2_channel_open_session(LIBSSH2_SESSION session) {
         final byte[] array = "session".getBytes(StandardCharsets.UTF_8);
@@ -340,6 +357,23 @@ public class libssh2 {
             int buflen
     ) {
         return libssh2_library().libssh2_channel_read_ex(getPointer(channel), stream_id, buf, buflen);
+    }
+
+    public static int libssh2_channel_read(
+            LIBSSH2_CHANNEL channel,
+            byte[] buf,
+            int buflen
+    ) {
+        return libssh2_channel_read_ex(channel, 0, buf, buflen);
+    }
+
+
+    public static int libssh2_channel_write(LIBSSH2_CHANNEL channel, byte[] buf, int buflen) {
+        return libssh2_channel_write_ex(channel, 0, buf, buflen);
+    }
+
+    public static int libssh2_channel_write_stderr(LIBSSH2_CHANNEL channel, byte[] buf, int buflen) {
+        return libssh2_channel_write_ex(channel, SSH_EXTENDED_DATA_STDERR, buf, buflen);
     }
 
     public static int libssh2_channel_close(LIBSSH2_CHANNEL channel) {
@@ -391,6 +425,10 @@ public class libssh2 {
     ) {
         final byte[] bytes = term.getBytes(StandardCharsets.UTF_8);
         return libssh2_channel_request_pty_ex(channel, bytes, bytes.length, null, 0, LIBSSH2_TERM_WIDTH, LIBSSH2_TERM_HEIGHT, LIBSSH2_TERM_WIDTH_PX, LIBSSH2_TERM_HEIGHT_PX);
+    }
+
+    public static void libssh2_channel_set_blocking(LIBSSH2_CHANNEL channel, int blocking) {
+        libssh2_library().libssh2_channel_set_blocking(getPointer(channel), blocking);
     }
 
     public static int libssh2_channel_write_ex(
@@ -743,6 +781,18 @@ public class libssh2 {
         }
 
         return rc;
+    }
+
+    public static int libssh2_channel_flush_ex(LIBSSH2_CHANNEL channel, int streamid) {
+        return libssh2_library().libssh2_channel_flush_ex(getPointer(channel), streamid);
+    }
+
+    public static int libssh2_channel_flush(LIBSSH2_CHANNEL channel) {
+        return libssh2_channel_flush_ex(channel, 0);
+    }
+
+    public static int libssh2_channel_flush_stderr(LIBSSH2_CHANNEL channel) {
+        return libssh2_channel_flush_ex(channel, SSH_EXTENDED_DATA_STDERR);
     }
 
     private static Pointer getPointer(Object object) {

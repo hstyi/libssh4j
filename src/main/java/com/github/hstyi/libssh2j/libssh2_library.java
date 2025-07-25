@@ -224,4 +224,14 @@ interface libssh2_library extends Library {
     int libssh2_channel_send_eof(Pointer pointer);
 
     int libssh2_channel_request_pty_size_ex(Pointer channel, int width, int height, int widthPx, int heightPx);
+
+    int libssh2_channel_flush_ex(Pointer pointer, int streamid);
+
+    void libssh2_channel_set_blocking(Pointer pointer, int blocking);
+
+    int libssh2_channel_get_exit_status(Pointer pointer);
+
+    int libssh2_channel_wait_eof(Pointer pointer);
+
+    int libssh2_channel_wait_closed(Pointer pointer);
 }

@@ -21,7 +21,9 @@ class libssh2_loader {
     private static final boolean isWin = os.contains("win");
     private static final boolean isMac = os.contains("mac");
     private static final boolean isUnix = os.contains("nix") || os.contains("nux");
-    private static final boolean isArm64 = arch.contains("aarch64");
+    private static final boolean isArm64 = arch.contains("aarch64") || arch.contains("arm64");
+    private static final boolean isX86 = arch.equals("x86") || arch.equals("i386") || arch.equals("i686");
+    private static final boolean isX64 = arch.equals("x86_64") || arch.equals("amd64") || arch.equals("x64");
 
     private static volatile libssh2_library instance;
 
@@ -101,21 +103,31 @@ class libssh2_loader {
     private static String getFilename() {
         final StringBuilder sb = new StringBuilder();
         if (isMac) {
-            sb.append("/darwin/");
+            sb.append("/darwin");
         } else if (isUnix) {
-            sb.append("/linux/");
+            sb.append("/linux");
+        } else if (isWin) {
+            sb.append("/win32");
+        } else {
+            throw new UnsupportedOperationException("Unsupported operating system: " + os);
         }
 
         if (isArm64) {
-            sb.append("aarch64/");
+            sb.append("/aarch64");
+        } else if (isX64) {
+            sb.append("/x86-64");
+        } else if (isX86) {
+            sb.append("/x86");
         } else {
-            sb.append("x86-64/");
+            throw new UnsupportedOperationException("Unsupported arch: " + arch);
         }
 
         if (isMac) {
-            sb.append("libssh2.dylib");
+            sb.append("/libssh2.dylib");
         } else if (isUnix) {
-            sb.append("libssh2.so");
+            sb.append("/libssh2.so");
+        } else {
+            sb.append("/libssh2.dll");
         }
 
         return sb.toString();
