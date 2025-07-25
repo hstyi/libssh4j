@@ -814,6 +814,9 @@ public class libssh2 {
         return libssh2_channel_window_write_ex(channel, null);
     }
 
+    public static int libssh2_session_method_pref(LIBSSH2_SESSION session, int method_type, byte[] prefs) {
+        return libssh2_library().libssh2_session_method_pref(getPointer(session), method_type, prefs);
+    }
 
     private static Pointer getPointer(Object object) {
         if (object instanceof LIBSSH2_POINTER) {

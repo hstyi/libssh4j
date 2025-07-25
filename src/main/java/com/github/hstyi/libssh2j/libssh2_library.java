@@ -239,4 +239,6 @@ interface libssh2_library extends Library {
     long libssh2_channel_window_read_ex(Pointer pointer, LongByReference readAvail, LongByReference windowSizeInitial);
 
     long libssh2_channel_window_write_ex(Pointer pointer, LongByReference windowSizeInitial);
+
+    int libssh2_session_method_pref(Pointer pointer, int methodType, byte[] prefs);
 }
