@@ -243,4 +243,8 @@ interface libssh2_library extends Library {
     int libssh2_session_method_pref(Pointer pointer, int methodType, byte[] prefs);
 
     int libssh2_session_supported_algs(Pointer pointer, int methodType, PointerByReference algs);
+
+    Pointer libssh2_session_methods(Pointer session, int methodType);
+
+    int libssh2_session_flag(Pointer pointer, int flag, int value);
 }

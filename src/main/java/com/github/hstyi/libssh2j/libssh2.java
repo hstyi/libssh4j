@@ -842,6 +842,16 @@ public class libssh2 {
         return libssh2_library().libssh2_session_supported_algs(getPointer(session), method_type, algs);
     }
 
+    public static @Nullable String libssh2_session_methods(LIBSSH2_SESSION session, int method_type) {
+        final Pointer pointer = libssh2_library().libssh2_session_methods(getPointer(session), method_type);
+        if (pointer == null) return null;
+        return pointer.getString(0);
+    }
+
+    public static int libssh2_session_flag(LIBSSH2_SESSION session, int flag, int value) {
+        return libssh2_library().libssh2_session_flag(getPointer(session), flag, value);
+    }
+
     private static Pointer getPointer(Object object) {
         if (object instanceof LIBSSH2_POINTER) {
             return ((LIBSSH2_POINTER) object).pointer;
