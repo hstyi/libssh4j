@@ -14,7 +14,7 @@ jobs:
 
       - uses: actions/setup-java@v4
         with:
-          distribution: '<distribution>'
+          distribution: 'temurin'
           java-version: ${{ matrix.java }}
 
       - name: Test
