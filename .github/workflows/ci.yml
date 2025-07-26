@@ -5,8 +5,8 @@ on: [ push, pull_request ]
 jobs:
   test:
     runs-on: ${{ matrix.os }}
-    continue-on-error: true
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: macos-13
@@ -62,6 +62,7 @@ jobs:
 
       - uses: actions/setup-java@v4
         with:
+          cache: 'maven'
           distribution: 'zulu'
           java-version: ${{ matrix.java }}
 
