@@ -236,15 +236,28 @@ public class libssh2 {
     public static final int LIBSSH2_CALLBACK_AUTHAGENT_IDENTITIES = 8;
     public static final int LIBSSH2_CALLBACK_AUTHAGENT_SIGN = 9;
 
+
     private static libssh2_library libssh2_library() {
         return libssh2_loader.getInstance();
     }
 
     public static int libssh2_init(int flags) {
+        if (libssh2_loader.isWin) {
+            final Ws2_32.WSAData wsaData = new Ws2_32.WSAData();
+            final int result = Ws2_32.INSTANCE.WSAStartup((short) 0x202, wsaData);
+            if (result != 0) {
+                throw new IllegalStateException("WSAStartup failed with error: " + result);
+            }
+        }
+
         return libssh2_library().libssh2_init(flags);
     }
 
     public static void libssh2_exit() {
+        if (libssh2_loader.isWin) {
+            Ws2_32.INSTANCE.WSACleanup();
+        }
+
         libssh2_library().libssh2_exit();
     }
 
@@ -270,8 +283,14 @@ public class libssh2 {
         return libssh2_library().libssh2_session_get_blocking(getPointer(session));
     }
 
-    public static int libssh2_session_handshake(LIBSSH2_SESSION session, int sock) {
-        return libssh2_library().libssh2_session_handshake(getPointer(session), sock);
+    public static int libssh2_session_handshake(LIBSSH2_SESSION session, libssh2_socket_t sock) {
+        if (sock instanceof unix_libssh2_socket_t) {
+            return libssh2_library().libssh2_session_handshake(getPointer(session), ((unix_libssh2_socket_t) sock).fd);
+        } else if (sock instanceof win32_libssh2_socket_t) {
+            return libssh2_library().libssh2_session_handshake(getPointer(session), ((win32_libssh2_socket_t) sock).fd);
+        } else {
+            throw new UnsupportedOperationException("Unsupported sock: " + sock);
+        }
     }
 
     public static byte @Nullable [] libssh2_hostkey_hash(LIBSSH2_SESSION session, int hash_type) {
@@ -883,6 +902,16 @@ public class libssh2 {
 
     public static Pointer libssh2_session_callback_set2(LIBSSH2_SESSION session, int cbtype, libssh2_cb_generic callback) {
         return libssh2_library().libssh2_session_callback_set2(getPointer(session), cbtype, callback);
+    }
+
+    public static int LIBSSH2_SOCKET_CLOSE(libssh2_socket_t sock) {
+        if (sock instanceof unix_libssh2_socket_t) {
+            return CLib.INSTANCE.close(((unix_libssh2_socket_t) sock).fd);
+        } else if (sock instanceof win32_libssh2_socket_t) {
+            return Ws2_32.INSTANCE.closesocket(((win32_libssh2_socket_t) sock).fd);
+        } else {
+            throw new UnsupportedOperationException("Unsupported sock: " + sock);
+        }
     }
 
     private static Pointer getPointer(Object object) {

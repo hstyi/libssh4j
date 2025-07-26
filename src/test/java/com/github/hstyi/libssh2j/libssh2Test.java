@@ -1,6 +1,5 @@
 package com.github.hstyi.libssh2j;
 
-import org.apache.commons.lang3.SystemUtils;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -11,12 +10,7 @@ import org.testcontainers.shaded.com.trilead.ssh2.crypto.Base64;
 import org.testcontainers.shaded.org.apache.commons.io.IOUtils;
 
 import java.io.File;
-import java.io.FileDescriptor;
 import java.io.FileOutputStream;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.net.Socket;
-import java.net.SocketImpl;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
@@ -96,11 +90,11 @@ class libssh2Test {
 
     @Test
     void test_username_password() throws Exception {
-        final int fd = createSocket("127.0.0.1", sshd.getMappedPort(2222));
+        final libssh2_socket_t sock = createSocket("127.0.0.1", sshd.getMappedPort(2222));
         final LIBSSH2_SESSION session = libssh2_session_init();
         assertNotNull(session);
 
-        assertEquals(LIBSSH2_ERROR_NONE, libssh2_session_handshake(session, fd));
+        assertEquals(LIBSSH2_ERROR_NONE, libssh2_session_handshake(session, sock));
         final byte[] bytes = libssh2_hostkey_hash(session, LIBSSH2_HOSTKEY_HASH_SHA256);
         assertNotNull(bytes);
         System.out.println(new String(Base64.encode(bytes)));
@@ -111,11 +105,12 @@ class libssh2Test {
         assertEquals(LIBSSH2_ERROR_NONE, libssh2_session_disconnect(session, "Bye"));
 
         assertEquals(LIBSSH2_ERROR_NONE, libssh2_session_free(session));
+        closeSocket(sock);
     }
 
     @Test
     void test_username_public_fromfile() throws Exception {
-        final int fd = createSocket("127.0.0.1", sshd.getMappedPort(2222));
+        final libssh2_socket_t sock = createSocket("127.0.0.1", sshd.getMappedPort(2222));
         final LIBSSH2_SESSION session = libssh2_session_init();
         assertNotNull(session);
 
@@ -130,7 +125,7 @@ class libssh2Test {
             IOUtils.write(ED25519_256_PRI, fos, StandardCharsets.UTF_8);
         }
 
-        assertEquals(LIBSSH2_ERROR_NONE, libssh2_session_handshake(session, fd));
+        assertEquals(LIBSSH2_ERROR_NONE, libssh2_session_handshake(session, sock));
         assertEquals(LIBSSH2_ERROR_NONE, libssh2_userauth_authenticated(session));
 
         assertEquals(LIBSSH2_ERROR_NONE, libssh2_userauth_publickey_fromfile(session, "foo", pub.getAbsolutePath().getBytes(StandardCharsets.UTF_8),
@@ -140,15 +135,16 @@ class libssh2Test {
         assertEquals(LIBSSH2_ERROR_NONE, libssh2_session_disconnect(session, "Bye"));
 
         assertEquals(LIBSSH2_ERROR_NONE, libssh2_session_free(session));
+        closeSocket(sock);
     }
 
     @Test
     void test_username_public_frommemory() throws Exception {
-        final int fd = createSocket("127.0.0.1", sshd.getMappedPort(2222));
+        final libssh2_socket_t sock = createSocket("127.0.0.1", sshd.getMappedPort(2222));
         final LIBSSH2_SESSION session = libssh2_session_init();
         assertNotNull(session);
 
-        assertEquals(LIBSSH2_ERROR_NONE, libssh2_session_handshake(session, fd));
+        assertEquals(LIBSSH2_ERROR_NONE, libssh2_session_handshake(session, sock));
         assertEquals(LIBSSH2_ERROR_NONE, libssh2_userauth_authenticated(session));
 
         final byte[] pub = ED25519_256_PUB.getBytes(StandardCharsets.UTF_8);
@@ -162,15 +158,16 @@ class libssh2Test {
         assertEquals(LIBSSH2_ERROR_NONE, libssh2_session_disconnect(session, "Bye"));
 
         assertEquals(LIBSSH2_ERROR_NONE, libssh2_session_free(session));
+        closeSocket(sock);
     }
 
     @Test
     void test_sftp() throws Exception {
-        final int fd = createSocket("127.0.0.1", sshd.getMappedPort(2222));
+        final libssh2_socket_t sock = createSocket("127.0.0.1", sshd.getMappedPort(2222));
         final LIBSSH2_SESSION session = libssh2_session_init();
         assertNotNull(session);
 
-        assertEquals(LIBSSH2_ERROR_NONE, libssh2_session_handshake(session, fd));
+        assertEquals(LIBSSH2_ERROR_NONE, libssh2_session_handshake(session, sock));
         assertEquals(LIBSSH2_ERROR_NONE, libssh2_userauth_password(session, "foo", "pass"));
 
         final LIBSSH2_SFTP sftp = libssh2_sftp_init(session);
@@ -230,32 +227,17 @@ class libssh2Test {
 
         assertEquals(LIBSSH2_ERROR_NONE, libssh2_session_disconnect(session, "Bye"));
         assertEquals(LIBSSH2_ERROR_NONE, libssh2_session_free(session));
+
+        closeSocket(sock);
     }
 
-    public static int createSocket(String host, int port) throws Exception {
-        Socket socket = new Socket(host, port);
+    public static libssh2_socket_t createSocket(String host, int port) throws Exception {
+        final libssh2_socket_t sock = libssh2_ext.create_libssh2_socket_t(host, port);
+        assertNotNull(sock);
+        return sock;
+    }
 
-        Field implField = Socket.class.getDeclaredField("impl");
-        implField.setAccessible(true);
-        Object socketImpl = implField.get(socket);
-
-        if (SystemUtils.IS_JAVA_1_8) {
-            Field getFileDescriptor = SocketImpl.class.getDeclaredField("fd");
-            getFileDescriptor.setAccessible(true);
-            Object fileDescriptor = getFileDescriptor.get(socketImpl);
-
-            Field fdField = FileDescriptor.class.getDeclaredField("fd");
-            fdField.setAccessible(true);
-            return fdField.getInt(fileDescriptor);
-        }
-
-        Method getFileDescriptor = SocketImpl.class.getDeclaredMethod("getFileDescriptor");
-        getFileDescriptor.setAccessible(true);
-        Object fileDescriptor = getFileDescriptor.invoke(socketImpl);
-
-        Field fdField = FileDescriptor.class.getDeclaredField("fd");
-        fdField.setAccessible(true);
-        return fdField.getInt(fileDescriptor);
-
+    public static void closeSocket(libssh2_socket_t sock) {
+        assertEquals(LIBSSH2_ERROR_NONE, libssh2.LIBSSH2_SOCKET_CLOSE(sock));
     }
 }
