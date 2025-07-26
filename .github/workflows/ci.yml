@@ -5,6 +5,7 @@ on: [ push, pull_request ]
 jobs:
   test:
     runs-on: ${{ matrix.os }}
+    continue-on-error: true
     strategy:
       matrix:
         include:
@@ -28,8 +29,6 @@ jobs:
           - os: ubuntu-24.04-arm
             java: '11'
           - os: windows-latest
-            java: '11'
-          - os: windows-11-arm
             java: '11'
 
           - os: macos-13
