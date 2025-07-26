@@ -15,7 +15,7 @@ jobs:
       - uses: actions/setup-java@v4
         if: ${{ !( (matrix.os == 'windows-11-arm' && matrix.java == '8') || (matrix.os != 'macos-15' && matrix.java == '8') ) }}
         with:
-          distribution: 'temurin'
+          distribution: 'zulu'
           java-version: ${{ matrix.java }}
 
       - name: Test
