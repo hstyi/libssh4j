@@ -7,15 +7,17 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ windows-latest, ubuntu-24.04-arm, ubuntu-latest, macos-15, macos-13 ]
-        java: [ '8', '11', '17' '21' ]
+        os: [ windows-11-arm, windows-latest, ubuntu-24.04-arm, ubuntu-latest, macos-15, macos-13 ]
+        java: [ '8', '11', '17', '21' ]
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-java@v4
+        if: ${{ !(matrix.os == 'windows-11-arm' && matrix.java == '8') }}
         with:
           distribution: 'temurin'
           java-version: ${{ matrix.java }}
 
       - name: Test
+        if: ${{ !(matrix.os == 'windows-11-arm' && matrix.java == '8') }}
         run: mvn test
