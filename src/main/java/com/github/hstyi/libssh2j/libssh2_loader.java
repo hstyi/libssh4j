@@ -31,24 +31,24 @@ class libssh2_loader {
         if (instance == null) {
             synchronized (libssh2_loader.class) {
                 if (instance == null) {
-                    final File libraryFile = getLibraryFile();
-                    instance = Native.load(libraryFile.getAbsolutePath(), libssh2_library.class);
+                    final String libraryFile = getLibraryFile();
+                    instance = Native.load(libraryFile, libssh2_library.class);
                 }
             }
         }
         return instance;
     }
 
-    private static File getLibraryFile() {
+    private static String getLibraryFile() {
 
         final String lfile = System.getProperty("libssh4j.library.file");
         if (lfile != null && !lfile.trim().isEmpty()) {
-            return new File(lfile);
+            return lfile;
         }
 
         final String path = System.getProperty("libssh4j.library.path");
         if (path != null && !path.trim().isEmpty()) {
-            return new File(path, getFilename());
+            return new File(path, getFilename()).getAbsolutePath();
         }
 
         final String filename = getFilename();
@@ -93,7 +93,7 @@ class libssh2_loader {
                 }
             }));
 
-            return file.toFile();
+            return file.toAbsolutePath().toString();
         } catch (IOException e) {
             throw new IllegalStateException(e.getMessage(), e);
         }
