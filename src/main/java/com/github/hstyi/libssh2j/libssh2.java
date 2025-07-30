@@ -283,6 +283,10 @@ public class libssh2 {
         return libssh2_library().libssh2_session_get_blocking(getPointer(session));
     }
 
+    public static int libssh2_session_startup(LIBSSH2_SESSION session, int sock) {
+        return libssh2_library().libssh2_session_startup(getPointer(session), sock);
+    }
+
     public static int libssh2_session_handshake(LIBSSH2_SESSION session, libssh2_socket_t sock) {
         if (sock instanceof unix_libssh2_socket_t) {
             return libssh2_library().libssh2_session_handshake(getPointer(session), ((unix_libssh2_socket_t) sock).fd);

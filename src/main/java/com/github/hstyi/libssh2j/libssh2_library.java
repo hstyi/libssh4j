@@ -254,4 +254,6 @@ interface libssh2_library extends Library {
     int libssh2_keepalive_config(Pointer pointer, int wantReply, int interval);
 
     Pointer libssh2_session_callback_set2(Pointer pointer, int cbtype, libssh2_cb_generic callback);
+
+    int libssh2_session_startup(Pointer pointer, int sock);
 }
