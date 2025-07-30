@@ -24,7 +24,7 @@ interface libssh2_library extends Library {
 
     int libssh2_session_get_blocking(Pointer session);
 
-    int libssh2_session_handshake(Pointer session, int sock);
+    int libssh2_session_handshake(Pointer session, Pointer sock);
 
     Pointer libssh2_hostkey_hash(Pointer session, int hash_type);
 
@@ -254,4 +254,6 @@ interface libssh2_library extends Library {
     int libssh2_keepalive_config(Pointer pointer, int wantReply, int interval);
 
     Pointer libssh2_session_callback_set2(Pointer pointer, int cbtype, libssh2_cb_generic callback);
+
+    int libssh2_session_startup(Pointer pointer, int sock);
 }

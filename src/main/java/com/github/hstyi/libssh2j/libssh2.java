@@ -236,6 +236,7 @@ public class libssh2 {
     public static final int LIBSSH2_CALLBACK_AUTHAGENT_IDENTITIES = 8;
     public static final int LIBSSH2_CALLBACK_AUTHAGENT_SIGN = 9;
 
+
     private static libssh2_library libssh2_library() {
         return libssh2_loader.getInstance();
     }
@@ -270,8 +271,12 @@ public class libssh2 {
         return libssh2_library().libssh2_session_get_blocking(getPointer(session));
     }
 
-    public static int libssh2_session_handshake(LIBSSH2_SESSION session, int sock) {
-        return libssh2_library().libssh2_session_handshake(getPointer(session), sock);
+    public static int libssh2_session_startup(LIBSSH2_SESSION session, int sock) {
+        return libssh2_library().libssh2_session_startup(getPointer(session), sock);
+    }
+
+    public static int libssh2_session_handshake(LIBSSH2_SESSION session, libssh2_socket_t sock) {
+        return libssh2_library().libssh2_session_handshake(getPointer(session), sock.getPointer());
     }
 
     public static byte @Nullable [] libssh2_hostkey_hash(LIBSSH2_SESSION session, int hash_type) {

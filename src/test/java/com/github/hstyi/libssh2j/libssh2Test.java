@@ -1,6 +1,6 @@
 package com.github.hstyi.libssh2j;
 
-import org.apache.commons.lang3.SystemUtils;
+import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -11,15 +11,16 @@ import org.testcontainers.shaded.com.trilead.ssh2.crypto.Base64;
 import org.testcontainers.shaded.org.apache.commons.io.IOUtils;
 
 import java.io.File;
-import java.io.FileDescriptor;
 import java.io.FileOutputStream;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.net.Socket;
-import java.net.SocketImpl;
+import java.net.Inet4Address;
+import java.net.Inet6Address;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
+import static com.github.hstyi.libssh2j.CLib.AF_INET;
+import static com.github.hstyi.libssh2j.CLib.AF_INET6;
 import static com.github.hstyi.libssh2j.libssh2.LIBSSH2_ERROR_NONE;
 import static com.github.hstyi.libssh2j.libssh2.LIBSSH2_ERROR_SFTP_PROTOCOL;
 import static com.github.hstyi.libssh2j.libssh2.LIBSSH2_FXF_CREAT;
@@ -96,11 +97,11 @@ class libssh2Test {
 
     @Test
     void test_username_password() throws Exception {
-        final int fd = createSocket("127.0.0.1", sshd.getMappedPort(2222));
+        final libssh2_socket_t sock = createSocket("127.0.0.1", sshd.getMappedPort(2222));
         final LIBSSH2_SESSION session = libssh2_session_init();
         assertNotNull(session);
 
-        assertEquals(LIBSSH2_ERROR_NONE, libssh2_session_handshake(session, fd));
+        assertEquals(LIBSSH2_ERROR_NONE, libssh2_session_handshake(session, sock));
         final byte[] bytes = libssh2_hostkey_hash(session, LIBSSH2_HOSTKEY_HASH_SHA256);
         assertNotNull(bytes);
         System.out.println(new String(Base64.encode(bytes)));
@@ -111,11 +112,12 @@ class libssh2Test {
         assertEquals(LIBSSH2_ERROR_NONE, libssh2_session_disconnect(session, "Bye"));
 
         assertEquals(LIBSSH2_ERROR_NONE, libssh2_session_free(session));
+        closeSocket(sock);
     }
 
     @Test
     void test_username_public_fromfile() throws Exception {
-        final int fd = createSocket("127.0.0.1", sshd.getMappedPort(2222));
+        final libssh2_socket_t sock = createSocket("127.0.0.1", sshd.getMappedPort(2222));
         final LIBSSH2_SESSION session = libssh2_session_init();
         assertNotNull(session);
 
@@ -130,7 +132,7 @@ class libssh2Test {
             IOUtils.write(ED25519_256_PRI, fos, StandardCharsets.UTF_8);
         }
 
-        assertEquals(LIBSSH2_ERROR_NONE, libssh2_session_handshake(session, fd));
+        assertEquals(LIBSSH2_ERROR_NONE, libssh2_session_handshake(session, sock));
         assertEquals(LIBSSH2_ERROR_NONE, libssh2_userauth_authenticated(session));
 
         assertEquals(LIBSSH2_ERROR_NONE, libssh2_userauth_publickey_fromfile(session, "foo", pub.getAbsolutePath().getBytes(StandardCharsets.UTF_8),
@@ -140,15 +142,16 @@ class libssh2Test {
         assertEquals(LIBSSH2_ERROR_NONE, libssh2_session_disconnect(session, "Bye"));
 
         assertEquals(LIBSSH2_ERROR_NONE, libssh2_session_free(session));
+        closeSocket(sock);
     }
 
     @Test
     void test_username_public_frommemory() throws Exception {
-        final int fd = createSocket("127.0.0.1", sshd.getMappedPort(2222));
+        final libssh2_socket_t sock = createSocket("127.0.0.1", sshd.getMappedPort(2222));
         final LIBSSH2_SESSION session = libssh2_session_init();
         assertNotNull(session);
 
-        assertEquals(LIBSSH2_ERROR_NONE, libssh2_session_handshake(session, fd));
+        assertEquals(LIBSSH2_ERROR_NONE, libssh2_session_handshake(session, sock));
         assertEquals(LIBSSH2_ERROR_NONE, libssh2_userauth_authenticated(session));
 
         final byte[] pub = ED25519_256_PUB.getBytes(StandardCharsets.UTF_8);
@@ -162,15 +165,16 @@ class libssh2Test {
         assertEquals(LIBSSH2_ERROR_NONE, libssh2_session_disconnect(session, "Bye"));
 
         assertEquals(LIBSSH2_ERROR_NONE, libssh2_session_free(session));
+        closeSocket(sock);
     }
 
     @Test
     void test_sftp() throws Exception {
-        final int fd = createSocket("127.0.0.1", sshd.getMappedPort(2222));
+        final libssh2_socket_t sock = createSocket("127.0.0.1", sshd.getMappedPort(2222));
         final LIBSSH2_SESSION session = libssh2_session_init();
         assertNotNull(session);
 
-        assertEquals(LIBSSH2_ERROR_NONE, libssh2_session_handshake(session, fd));
+        assertEquals(LIBSSH2_ERROR_NONE, libssh2_session_handshake(session, sock));
         assertEquals(LIBSSH2_ERROR_NONE, libssh2_userauth_password(session, "foo", "pass"));
 
         final LIBSSH2_SFTP sftp = libssh2_sftp_init(session);
@@ -230,32 +234,79 @@ class libssh2Test {
 
         assertEquals(LIBSSH2_ERROR_NONE, libssh2_session_disconnect(session, "Bye"));
         assertEquals(LIBSSH2_ERROR_NONE, libssh2_session_free(session));
+
+        closeSocket(sock);
     }
 
-    public static int createSocket(String host, int port) throws Exception {
-        Socket socket = new Socket(host, port);
+    public static libssh2_socket_t createSocket(String host, int port) throws Exception {
+        final libssh2_socket_t sock = create_libssh2_socket_t(host, port);
+        assertNotNull(sock);
+        return sock;
+    }
 
-        Field implField = Socket.class.getDeclaredField("impl");
-        implField.setAccessible(true);
-        Object socketImpl = implField.get(socket);
+    public static void closeSocket(libssh2_socket_t sock) {
+    }
 
-        if (SystemUtils.IS_JAVA_1_8) {
-            Field getFileDescriptor = SocketImpl.class.getDeclaredField("fd");
-            getFileDescriptor.setAccessible(true);
-            Object fileDescriptor = getFileDescriptor.get(socketImpl);
 
-            Field fdField = FileDescriptor.class.getDeclaredField("fd");
-            fdField.setAccessible(true);
-            return fdField.getInt(fileDescriptor);
+    @Nullable
+    public static libssh2_socket_t create_libssh2_socket_t(String host, int port) {
+        final InetAddress addr;
+
+        try {
+            addr = InetAddress.getByName(host);
+        } catch (UnknownHostException e) {
+            return null;
         }
 
-        Method getFileDescriptor = SocketImpl.class.getDeclaredMethod("getFileDescriptor");
-        getFileDescriptor.setAccessible(true);
-        Object fileDescriptor = getFileDescriptor.invoke(socketImpl);
+        if (libssh2_loader.isWin) {
 
-        Field fdField = FileDescriptor.class.getDeclaredField("fd");
-        fdField.setAccessible(true);
-        return fdField.getInt(fileDescriptor);
+            final int socket = Ws2_32.INSTANCE.socket(Ws2_32.AF_INET, Ws2_32.SOCK_STREAM, Ws2_32.IPPROTO_TCP);
+            if (Ws2_32.INVALID_SOCKET == socket) {
+                return null;
+            }
 
+            Ws2_32.SockaddrIn serverAddr = new Ws2_32.SockaddrIn();
+            serverAddr.sin_family = Ws2_32.AF_INET;
+            serverAddr.sin_port = Ws2_32.INSTANCE.htons((short) port);
+            serverAddr.sin_addr = Ws2_32.INSTANCE.inet_addr("127.0.0.1");
+
+            int result = Ws2_32.INSTANCE.connect(socket, serverAddr, serverAddr.size());
+            if (result == Ws2_32.SOCKET_ERROR) {
+                Ws2_32.INSTANCE.closesocket(socket);
+            }
+
+            return new win32_libssh2_socket_t(socket);
+        } else {
+            final int fd = CLib.INSTANCE.socket(AF_INET, CLib.SOCK_STREAM, 0);
+            if (fd < 0) return null;
+
+            if (addr instanceof Inet4Address) {
+                CLib.sockaddr_in sockaddr = new CLib.sockaddr_in();
+                sockaddr.sin_family = AF_INET;
+                sockaddr.sin_port = Short.reverseBytes((short) port);
+                sockaddr.sin_addr = addr.getAddress();
+                sockaddr.sin_zero = new byte[8];
+                final int connect = CLib.INSTANCE.connect(fd, sockaddr, sockaddr.size());
+                if (connect != 0) {
+                    CLib.INSTANCE.close(fd);
+                    return null;
+                }
+            } else if (addr instanceof Inet6Address) {
+                final CLib.sockaddr_in6 addr6 = new CLib.sockaddr_in6();
+                addr6.sin6_family = AF_INET6;
+                addr6.sin6_port = Short.reverseBytes((short) port);
+                addr6.sin6_flowinfo = 0;
+                addr6.sin6_addr = addr.getAddress();
+                addr6.sin6_scope_id = 0;
+
+                final int connect = CLib.INSTANCE.connect(fd, addr6, addr6.size());
+                if (connect != 0) {
+                    CLib.INSTANCE.close(fd);
+                    return null;
+                }
+            }
+
+            return new unix_libssh2_socket_t(fd);
+        }
     }
 }

@@ -18,7 +18,7 @@ class libssh2_loader {
 
     private static final String os = System.getProperty("os.name").toLowerCase();
     private static final String arch = System.getProperty("os.arch").toLowerCase();
-    private static final boolean isWin = os.contains("win");
+    static final boolean isWin = os.contains("win");
     private static final boolean isMac = os.contains("mac");
     private static final boolean isUnix = os.contains("nix") || os.contains("nux");
     private static final boolean isArm64 = arch.contains("aarch64") || arch.contains("arm64");
