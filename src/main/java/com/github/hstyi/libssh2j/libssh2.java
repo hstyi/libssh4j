@@ -267,6 +267,10 @@ public class libssh2 {
         libssh2_library().libssh2_session_set_blocking(getPointer(session), blocking);
     }
 
+    public static int libssh2_session_block_directions(LIBSSH2_SESSION session) {
+        return libssh2_library().libssh2_session_block_directions(getPointer(session));
+    }
+
     public static int libssh2_session_get_blocking(LIBSSH2_SESSION session) {
         return libssh2_library().libssh2_session_get_blocking(getPointer(session));
     }
